@@ -1,6 +1,6 @@
-# Roblox ESP Library (Fixed & R6/R15 Compatible)
+# Roblox ESP Library
 
-A lightweight, feature-rich Roblox ESP library supporting boxes, chams, health/kevlar bars, distance, and weapon tracking. This version includes patches for modern compatibility, fixing the `EquippedTool` crash and adding support for both **R6** and **R15** character rigs.
+cool lookin esp library
 
 ---
 
@@ -23,3 +23,7 @@ esp.team_names = {true, Color3.fromRGB(255, 255, 255)}
 esp.team_weapon = {true, Color3.fromRGB(255, 255, 255)}
 esp.team_distance = true
 esp.team_health = true
+```
+Original Leaker: fijis
+
+Patches & Updates: Fixed EquippedTool nil errors and added R6/R15 rig scaling support.
