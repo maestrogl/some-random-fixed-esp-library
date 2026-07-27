@@ -146,7 +146,9 @@ end
 function esp.checkalive(plr)
     if not plr then plr = localPlayer end
     local pass = false
-    if (plr.Character and plr.Character:FindFirstChild('Humanoid') and plr.Character:FindFirstChild('Head') and plr.Character:FindFirstChild('LeftUpperArm') and plr.Character.Humanoid.Health > 0 and plr.Character.LeftUpperArm.Transparency == 0) then
+    local char = plr.Character
+    -- Fixed for R6 & R15 compatibility by checking Head transparency instead of LeftUpperArm
+    if (char and char:FindFirstChild('Humanoid') and char:FindFirstChild('Head') and char.Humanoid.Health > 0 and char.Head.Transparency == 0) then
         pass = true
     end
     return pass
@@ -420,11 +422,19 @@ function esp:update()
             local smallestX, biggestX = math.huge, -math.huge
             local smallestY, biggestY = math.huge, -math.huge
 
-            local y = (centerMassPos.p - character['Head'].Position).magnitude + character['Head'].Size.Y / 2
-            local x1 = (centerMassPos.p - character['RightHand'].Position).magnitude
-            local x2 = (centerMassPos.p - character['LeftHand'].Position).magnitude
-            local minY1 = (centerMassPos.p - character['RightFoot'].Position).magnitude
-            local minY2 = (centerMassPos.p - character['LeftFoot'].Position).magnitude
+            -- Fixed to locate parts regardless of RigType (R6 or R15 fallback)
+            local head = character:FindFirstChild('Head')
+            local rootPart = character:FindFirstChild('HumanoidRootPart')
+            local rightArm = character:FindFirstChild('RightHand') or character:FindFirstChild('Right Arm') or rootPart
+            local leftArm = character:FindFirstChild('LeftHand') or character:FindFirstChild('Left Arm') or rootPart
+            local rightLeg = character:FindFirstChild('RightFoot') or character:FindFirstChild('Right Leg') or rootPart
+            local leftLeg = character:FindFirstChild('LeftFoot') or character:FindFirstChild('Left Leg') or rootPart
+
+            local y = (centerMassPos.p - head.Position).magnitude + head.Size.Y / 2
+            local x1 = (centerMassPos.p - rightArm.Position).magnitude
+            local x2 = (centerMassPos.p - leftArm.Position).magnitude
+            local minY1 = (centerMassPos.p - rightLeg.Position).magnitude
+            local minY2 = (centerMassPos.p - leftLeg.Position).magnitude
 
             local minY = minY1 > minY2 and minY1 or minY2
             local minX = x1 < x2 and x1 or x2
