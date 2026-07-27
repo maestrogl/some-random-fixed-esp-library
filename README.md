@@ -9,7 +9,7 @@ cool lookin esp library
 Load and configure the library directly in your executor:
 
 ```lua
-local esp = loadstring(game:HttpGet('YOUR_RAW_GITHUB_URL_HERE'))()
+local esp = loadstring(game:HttpGet('https://raw.githubusercontent.com/maestrogl/some-random-fixed-esp-library/refs/heads/main/Fixed.lua'))()
 
 esp.enabled = true
 esp.teamcheck = false
