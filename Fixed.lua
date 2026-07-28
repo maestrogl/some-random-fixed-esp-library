@@ -133,8 +133,8 @@ function esp:raycast(a, b, c)
     if ray ~= nil then
         if ray.Instance.Transparency >= .250 then
             TINSERT(c, ray.Instance);
-            -- FIX 4: Explicitly return the recursive result so it doesn't fall through
-            return self:raycast(a,b,c)[cite: 1]
+            -- FIX 4: Explicitly return the recursive result so it doesn't fall through[cite: 1]
+            return self:raycast(a,b,c) 
         end
     end
     return ray
@@ -167,10 +167,10 @@ end
 
 function esp:checkvisible(instance, origin, params)
     if not params then params = {} end
-    local camera = workspace.CurrentCamera -- FIX 2: Dynamic camera reference
+    local camera = workspace.CurrentCamera -- FIX 2: Dynamic camera reference[cite: 1]
     if not camera then return false end
     
-    local hit = self:raycast(camera.CFrame.p, (origin.Position - camera.CFrame.p).unit * 500, { unpack(params), camera, localPlayer.Character })[cite: 1]
+    local hit = self:raycast(camera.CFrame.p, (origin.Position - camera.CFrame.p).unit * 500, { unpack(params), camera, localPlayer.Character }) 
     return (hit and hit.Instance:IsDescendantOf(instance)) and true or false
 end
 
@@ -292,7 +292,7 @@ function esp:remove(plr)
     local objects = self.players[playerName];
     if objects then
         for i, v in next, objects do
-            v:Remove()[cite: 1]
+            v:Remove() --[cite: 1]
         end;
         self.players[playerName] = nil;
     end;
@@ -346,8 +346,8 @@ function esp:update()
                 continue
             end
 
-            -- FIX 5: Changed indexing `0` to `1` for safe string manipulation in Luau
-            local playerName = LEN(plr) > esp.maxchar and esp.shortnames and SUB(plr, 1, esp.maxchar) .. '..' or plr[cite: 1]
+            -- FIX 5: Changed indexing `0` to `1` for safe string manipulation in Luau[cite: 1]
+            local playerName = LEN(plr) > esp.maxchar and esp.shortnames and SUB(plr, 1, esp.maxchar) .. '..' or plr 
             local pass = esp:check(player)
             local distance = tostring(FLOOR((rootPart.CFrame.p - camera.CFrame.p).Magnitude  / 3))  .. 'm'
             local _, onScreen = camera:WorldToViewportPoint(rootPart.Position)
