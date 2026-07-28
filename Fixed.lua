@@ -23,12 +23,10 @@ local esp = {
     -- instances
     --\ @teammates
     team_chams = { false, Color3.new(1, 1, 1), Color3.new(1, 1, 1), .25, .75, true },
-    --
     team_boxes = { false, Color3.new(), Color3.new(), 0.95 },
     team_healthbar = { false, Color3.new(), Color3.new() },
     team_kevlarbar = { false, Color3.new(), Color3.new() },
     team_arrow = { false, Color3.new(), 0.5 },
-    --
     team_names = { false, Color3.new()},
     team_weapon = { false, Color3.new()},
     team_distance = false,
@@ -36,12 +34,10 @@ local esp = {
 
     --\ @enemies
     enemy_chams = { false, Color3.new(1, 1, 1), Color3.new(1, 1, 1), .25, .75, true },
-    --
     enemy_boxes = { false, Color3.new(), Color3.new(), 0.95 },
     enemy_healthbar = { false, Color3.new(), Color3.new() },
     enemy_kevlarbar = { false, Color3.new(), Color3.new() },
     enemy_arrow = { false, Color3.new(), 0.5 },
-    --
     enemy_names = { false, Color3.new()},
     enemy_weapon = { false, Color3.new()},
     enemy_distance = false,
@@ -49,12 +45,10 @@ local esp = {
 
     --\ @priority
     priority_chams = { false, Color3.new(1, 1, 1), Color3.new(1, 1, 1), .25, .75, true },
-    --
     priority_boxes = { false, Color3.new(), Color3.new(), 0.95 },
     priority_healthbar = { false, Color3.new(), Color3.new() },
     priority_kevlarbar = { false, Color3.new(), Color3.new() },
     priority_arrow = { false, Color3.new(), 0.5 },
-    --
     priority_names = { false, Color3.new()},
     priority_weapon = { false, Color3.new()},
     priority_distance = false,
@@ -90,7 +84,6 @@ local SUB       = string.sub
 
 local TINSERT   = table.insert
 local TFIND     = table.find
-
 
 -- functions
 function esp:draw(a, b)
@@ -133,7 +126,6 @@ function esp:raycast(a, b, c)
     if ray ~= nil then
         if ray.Instance.Transparency >= .250 then
             TINSERT(c, ray.Instance);
-            -- FIX 4: Explicitly return the recursive result so it doesn't fall through[cite: 1]
             return self:raycast(a,b,c) 
         end
     end
@@ -157,17 +149,15 @@ end
 function esp.checkteam(plr, bool)
     if not plr then plr = localPlayer end
     if plr == localPlayer then return bool end
-    
-    -- FIX 7: Safe team check handling nil teams
     if plr.Team and localPlayer.Team then
         return plr.Team ~= localPlayer.Team
     end
-    return true -- Default to true if teams are not utilized
+    return true
 end
 
 function esp:checkvisible(instance, origin, params)
     if not params then params = {} end
-    local camera = workspace.CurrentCamera -- FIX 2: Dynamic camera reference[cite: 1]
+    local camera = workspace.CurrentCamera
     if not camera then return false end
     
     local hit = self:raycast(camera.CFrame.p, (origin.Position - camera.CFrame.p).unit * 500, { unpack(params), camera, localPlayer.Character }) 
@@ -179,7 +169,7 @@ function esp:check(plr)
     local pass = true;
     local character = self.getcharacter(plr);
     local camera = workspace.CurrentCamera
-    local rootPart = character and character:FindFirstChild('HumanoidRootPart') -- FIX 3: Replaced PrimaryPart with HumanoidRootPart[cite: 1]
+    local rootPart = character and character:FindFirstChild('HumanoidRootPart')
 
     if not self.checkalive(plr) then
         pass = false;
@@ -221,7 +211,7 @@ function esp:convertnumrange(val, oldmin, oldmax, newmin, newmax)
 end;
 
 function esp:fadeviadistance(data)
-    local camera = workspace.CurrentCamera -- FIX 2: Dynamic camera reference[cite: 1]
+    local camera = workspace.CurrentCamera
     if not camera then return 1 end
     return data.limit and 1 - CLAMP(self:convertnumrange(FLOOR(((data.cframe.p - camera.CFrame.p)).magnitude), (data.maxdistance - data.factor), data.maxdistance, 0, 1), 0, 1) or 1;
 end;
@@ -250,15 +240,13 @@ function esp:add(plr)
         arrow_kevlarbar_outline = esp:draw('Square', { Filled = true, Thickness = 1 }),
         arrow_kevlarbar_inline = esp:draw('Square', { Filled = true, Thickness = 1, Color = NEWCOLOR3(0.3, 0.3, 0.3) }),
         arrow_kevlarbar = esp:draw('Square', { Filled = true, Thickness = 1, Color = NEWCOLOR3(1,1,1) }),
-        arrow = esp:draw('Triangle', { Filled = true, Thickness = 1, });
-        -- bars
+        arrow = esp:draw('Triangle', { Filled = true, Thickness = 1, }),
         bar_outline = esp:draw('Square', { Filled = true, Thickness = 1 }),
         bar_inline = esp:draw('Square', { Filled = true, Thickness = 1, Color = NEWCOLOR3(0.3, 0.3, 0.3) }),
         bar = esp:draw('Square', { Filled = true, Thickness = 1, Color = NEWCOLOR3(1,1,1) }),
         kevlarbar_outline = esp:draw('Square', { Filled = true, Thickness = 1 }),
         kevlarbar_inline = esp:draw('Square', { Filled = true, Thickness = 1, Color = NEWCOLOR3(0.3, 0.3, 0.3) }),
         kevlarbar = esp:draw('Square', { Filled = true, Thickness = 1, Color = NEWCOLOR3(1,1,1) }),
-        -- text
         name_outline = esp:draw('Text', { Color = NEWCOLOR3(), Font = 2, Size = 13 }),
         name = esp:draw('Text', { Color = NEWCOLOR3(1,1,1), Font = 2, Size = 13 }),
         distance_outline = esp:draw('Text', { Color = NEWCOLOR3(), Font = 2, Size = 13 }),
@@ -267,7 +255,8 @@ function esp:add(plr)
         weapon = esp:draw('Text', { Color = NEWCOLOR3(1,1,1), Font = 2, Size = 13 }),
         health = esp:draw('Text', { Color = NEWCOLOR3(1,1,1), Font = 2, Size = 13, Center = true })
     }
-    local chams = { ins = esp:create('Highlight', { Name = plr.Name }) }
+    
+    local chams = { ins = esp:create('Highlight', { Name = plr.Name, Parent = folder }) }
     function chams:Remove() chams.ins:Destroy() end
     objs['chams'] = chams
     self.players[plr.Name] = objs
@@ -287,18 +276,16 @@ function esp:disable(plr)
 end;
 
 function esp:remove(plr)
-    -- FIX 6: Handle raw string calls and prevent nil indexing
     local playerName = type(plr) == "string" and plr or plr.Name
     local objects = self.players[playerName];
     if objects then
         for i, v in next, objects do
-            v:Remove() --[cite: 1]
+            v:Remove() 
         end;
         self.players[playerName] = nil;
     end;
 end;
 
--- connections
 function esp:connect(a, callback)
     local c = a:Connect(callback)
     TINSERT(self.connections, c)
@@ -321,17 +308,26 @@ function esp:clearconnections()
     end
 end
 
+-- Proper cleanup function to wipe everything gracefully
+function esp:Unload()
+    self:clearconnections()
+    for _, drawing in next, self.players do
+        for _, v in next, drawing do
+            v:Remove()
+        end
+    end
+    table.clear(self.players)
+    if folder then folder:Destroy() end
+end
+
 function esp:update()
-    local camera = workspace.CurrentCamera -- FIX 2: Dynamic camera reference[cite: 1]
+    local camera = workspace.CurrentCamera
     if not camera then return end
 
     for plr, drawing in next, esp.players do
         local player = players:FindFirstChild(plr)
         if not player then 
-            -- FIX 1: Prevent memory leak by removing drawings before clearing the table
-            for _, v in next, drawing do
-                v:Remove()
-            end
+            for _, v in next, drawing do v:Remove() end
             esp.players[plr] = nil 
             continue 
         end
@@ -340,13 +336,11 @@ function esp:update()
             local character = esp.getcharacter(player)
             local rootPart = character:FindFirstChild('HumanoidRootPart')
             
-            -- FIX 3: Safe rootPart check
             if not rootPart then
                 esp:disable(player)
                 continue
             end
 
-            -- FIX 5: Changed indexing `0` to `1` for safe string manipulation in Luau[cite: 1]
             local playerName = LEN(plr) > esp.maxchar and esp.shortnames and SUB(plr, 1, esp.maxchar) .. '..' or plr 
             local pass = esp:check(player)
             local distance = tostring(FLOOR((rootPart.CFrame.p - camera.CFrame.p).Magnitude  / 3))  .. 'm'
@@ -359,18 +353,19 @@ function esp:update()
                 factor = esp.fadefactor
             })
             
-            local kevlar = 0
-            if player:FindFirstChild('Kevlar') then
-                kevlar = player.Kevlar.Value
-            end
+            local kevlar = player:FindFirstChild('Kevlar') and player.Kevlar.Value or 0
+            local maxKevlar = 100 
+            
             local health = FLOOR(character.Humanoid.Health)
+            local maxHealth = FLOOR(character.Humanoid.MaxHealth)
+            if maxHealth == 0 then maxHealth = 100 end
 
             local flag = 'team_'
             if esp.checkteam(player, false) then
                 flag = 'enemy_'
             end
 
-            if TFIND(esp.priority_players, player) then
+            if TFIND(esp.priority_players, player.Name) or TFIND(esp.priority_players, player) then
                 flag = 'priority_'
             end
 
@@ -394,31 +389,33 @@ function esp:update()
                 
                 if esp.arrowinfo then
                     local smallestX, smallestY, biggestX, biggestY = esp:returntriangleoffsets(drawing.arrow)
-                    -- healthbar
+                    
+                    local arrowOutlineSizeY = biggestY - smallestY
+                    drawing.arrow_bar.Size = esp:floorvector(NEWVEC2(1, ( - health / maxHealth * ( arrowOutlineSizeY + 2)) + 3))
+                    drawing.arrow_bar.Position = esp:floorvector(NEWVEC2(smallestX - 3, smallestY + arrowOutlineSizeY))
+                    
                     drawing.arrow_bar.Visible = not onScreen and drawing.arrow.Visible and esp[ flag .. 'healthbar'][1]
                     drawing.arrow_bar_inline.Visible = drawing.arrow_bar.Visible
                     drawing.arrow_bar_outline.Visible = esp.outlines and drawing.arrow_bar.Visible
                     if drawing.arrow_bar.Visible then
-                        drawing.arrow_bar.Color = esp[ flag .. 'healthbar'][3]:Lerp(esp[ flag .. 'healthbar'][2], health / 100)
-                        drawing.arrow_bar.Size = esp:floorvector(NEWVEC2(1, ( - health / 100 * ( biggestY - smallestY + 2)) + 3))
-                        drawing.arrow_bar.Position = esp:floorvector(NEWVEC2(smallestX - 3, smallestY + drawing.arrow_bar_outline.Size.Y))
+                        drawing.arrow_bar.Color = esp[ flag .. 'healthbar'][3]:Lerp(esp[ flag .. 'healthbar'][2], health / maxHealth)
                         drawing.arrow_bar.Transparency = transparency
-                        drawing.arrow_bar_inline.Size = esp:floorvector(NEWVEC2(1, ( - 1 * ( biggestY - smallestY + 2)) + 3))
+                        drawing.arrow_bar_inline.Size = esp:floorvector(NEWVEC2(1, ( - 1 * ( arrowOutlineSizeY + 2)) + 3))
                         drawing.arrow_bar_inline.Position = drawing.arrow_bar.Position
                         drawing.arrow_bar_inline.Transparency = transparency
-                        drawing.arrow_bar_outline.Size = esp:floorvector(NEWVEC2(1, biggestY - smallestY))
+                        drawing.arrow_bar_outline.Size = esp:floorvector(NEWVEC2(1, arrowOutlineSizeY))
                         drawing.arrow_bar_outline.Position = esp:floorvector(NEWVEC2(smallestX - 2, smallestY + 1))
                         drawing.arrow_bar_outline.Transparency = transparency
                     end
 
-                    -- kevlarbar
+                    drawing.arrow_kevlarbar.Size = esp:floorvector(NEWVEC2(( kevlar / maxKevlar * ( biggestX - smallestX)), 1))
+                    drawing.arrow_kevlarbar.Position = esp:floorvector(NEWVEC2(smallestX, biggestY + 2))
+
                     drawing.arrow_kevlarbar.Visible = not onScreen and drawing.arrow.Visible and esp[ flag .. 'kevlarbar'][1]
                     drawing.arrow_kevlarbar_inline.Visible = drawing.arrow_kevlarbar.Visible
                     drawing.arrow_kevlarbar_outline.Visible = esp.outlines and drawing.arrow_kevlarbar.Visible
                     if drawing.arrow_kevlarbar.Visible then
-                        drawing.arrow_kevlarbar.Color = esp[ flag .. 'kevlarbar'][3]:Lerp(esp[ flag .. 'kevlarbar'][2], kevlar / 100)
-                        drawing.arrow_kevlarbar.Size = esp:floorvector(NEWVEC2(( kevlar / 100 * ( biggestX - smallestX)), 1))
-                        drawing.arrow_kevlarbar.Position = esp:floorvector(NEWVEC2(smallestX, biggestY + 2))
+                        drawing.arrow_kevlarbar.Color = esp[ flag .. 'kevlarbar'][3]:Lerp(esp[ flag .. 'kevlarbar'][2], kevlar / maxKevlar)
                         drawing.arrow_kevlarbar.Transparency = transparency
                         drawing.arrow_kevlarbar_inline.Size = esp:floorvector(NEWVEC2((biggestX - smallestX), 1))
                         drawing.arrow_kevlarbar_inline.Position = drawing.arrow_kevlarbar.Position
@@ -428,7 +425,6 @@ function esp:update()
                         drawing.arrow_kevlarbar_outline.Transparency = transparency
                     end
 
-                    -- name
                     drawing.arrow_name.Visible = not onScreen and drawing.arrow.Visible and esp[ flag .. 'names'][1]
                     drawing.arrow_name_outline.Visible = esp.outlines and drawing.arrow_name.Visible
                     if drawing.arrow_name.Visible then
@@ -447,10 +443,8 @@ function esp:update()
                 end
             end;
 
-            -- chams
             drawing.chams.ins.Enabled = esp[ flag .. 'chams'][1] and pass
             drawing.chams.ins.Adornee = esp[ flag .. 'chams'][1] and player.Character or nil
-            drawing.chams.ins.Parent = folder
             if drawing.chams.ins.Enabled then
                 drawing.chams.ins.FillColor = esp[ flag .. 'chams'][2]
                 drawing.chams.ins.OutlineColor = esp[ flag .. 'chams'][3]
@@ -491,6 +485,14 @@ function esp:update()
                 if biggestY < pos.Y then biggestY = pos.Y end
             end
 
+            -- Calculate standard boundaries regardless of visibility
+            local outlineSizeY = biggestY - smallestY
+            drawing.bar.Size = esp:floorvector(NEWVEC2(1, ( - health / maxHealth * ( outlineSizeY + 2)) + 3))
+            drawing.bar.Position = esp:floorvector(NEWVEC2(smallestX - 3, smallestY + outlineSizeY))
+            
+            drawing.kevlarbar.Size = esp:floorvector(NEWVEC2(( kevlar / maxKevlar * ( biggestX - smallestX)), 1))
+            drawing.kevlarbar.Position = esp:floorvector(NEWVEC2(smallestX, biggestY + 2))
+
             -- box
             drawing.box.Visible = esp[ flag .. 'boxes'][1]
             drawing.box_fill.Visible = drawing.box.Visible
@@ -500,12 +502,12 @@ function esp:update()
                 drawing.box.Size = esp:floorvector(NEWVEC2(biggestX - smallestX, biggestY - smallestY))
                 drawing.box.Position = esp:floorvector(NEWVEC2(smallestX, smallestY))
                 drawing.box.Transparency = transparency
-                --
+                
                 drawing.box_fill.Size = drawing.box.Size
                 drawing.box_fill.Position = drawing.box.Position
                 drawing.box_fill.Color = esp[ flag .. 'boxes'][3]
                 drawing.box_fill.Transparency = MIN(esp[ flag .. 'boxes'][4], transparency)
-                --
+                
                 drawing.box_outline.Size = drawing.box.Size
                 drawing.box_outline.Position = drawing.box.Position + NEWVEC2(1,1)
                 drawing.box_outline.Transparency = transparency
@@ -516,14 +518,12 @@ function esp:update()
             drawing.bar_inline.Visible = drawing.bar.Visible
             drawing.bar_outline.Visible = esp.outlines and drawing.bar.Visible
             if drawing.bar.Visible then
-                drawing.bar.Color = esp[ flag .. 'healthbar'][3]:Lerp(esp[ flag .. 'healthbar'][2], health / 100)
-                drawing.bar.Size = esp:floorvector(NEWVEC2(1, ( - health / 100 * ( biggestY - smallestY + 2)) + 3))
-                drawing.bar.Position = esp:floorvector(NEWVEC2(smallestX - 3, smallestY + drawing.bar_outline.Size.Y))
+                drawing.bar.Color = esp[ flag .. 'healthbar'][3]:Lerp(esp[ flag .. 'healthbar'][2], health / maxHealth)
                 drawing.bar.Transparency = transparency
-                drawing.bar_inline.Size = esp:floorvector(NEWVEC2(1, ( - 1 * ( biggestY - smallestY + 2)) + 3))
+                drawing.bar_inline.Size = esp:floorvector(NEWVEC2(1, ( - 1 * ( outlineSizeY + 2)) + 3))
                 drawing.bar_inline.Position = drawing.bar.Position
                 drawing.bar_inline.Transparency = transparency
-                drawing.bar_outline.Size = esp:floorvector(NEWVEC2(1, biggestY - smallestY))
+                drawing.bar_outline.Size = esp:floorvector(NEWVEC2(1, outlineSizeY))
                 drawing.bar_outline.Position = esp:floorvector(NEWVEC2(smallestX - 2, smallestY + 1))
                 drawing.bar_outline.Transparency = transparency
             end
@@ -533,9 +533,7 @@ function esp:update()
             drawing.kevlarbar_inline.Visible = drawing.kevlarbar.Visible
             drawing.kevlarbar_outline.Visible = esp.outlines and drawing.kevlarbar.Visible
             if drawing.kevlarbar.Visible then
-                drawing.kevlarbar.Color = esp[ flag .. 'kevlarbar'][3]:Lerp(esp[ flag .. 'kevlarbar'][2], kevlar / 100)
-                drawing.kevlarbar.Size = esp:floorvector(NEWVEC2(( kevlar / 100 * ( biggestX - smallestX)), 1))
-                drawing.kevlarbar.Position = esp:floorvector(NEWVEC2(smallestX, biggestY + 2))
+                drawing.kevlarbar.Color = esp[ flag .. 'kevlarbar'][3]:Lerp(esp[ flag .. 'kevlarbar'][2], kevlar / maxKevlar)
                 drawing.kevlarbar.Transparency = transparency
                 drawing.kevlarbar_inline.Size = esp:floorvector(NEWVEC2(( 1 * ( biggestX - smallestX)), 1))
                 drawing.kevlarbar_inline.Position = drawing.kevlarbar.Position
@@ -580,13 +578,15 @@ function esp:update()
             end
 
             -- health
-            drawing.health.Visible = health ~= 100 and health ~= 0  and esp[flag .. 'health']
+            drawing.health.Visible = health < maxHealth and health ~= 0 and esp[flag .. 'health']
             if drawing.health.Visible then
                 drawing.health.Text = tostring(health)
                 drawing.health.Font = Drawing.Fonts[esp.font]
                 drawing.health.Size = esp.textsize
                 drawing.health.Outline = esp.outlines
-                drawing.health.Color = esp[ flag .. 'healthbar'][3]:Lerp(esp[ flag .. 'healthbar'][2], health / 100)
+                drawing.health.Color = esp[ flag .. 'healthbar'][3]:Lerp(esp[ flag .. 'healthbar'][2], health / maxHealth)
+                
+                -- The text position is now safe because drawing.bar size/pos is calculated regardless of visibility!
                 drawing.health.Position = esp:floorvector(NEWVEC2(smallestX - 3, drawing.bar.Position.Y + drawing.bar.Size.Y - drawing.health.TextBounds.Y + 5))
                 drawing.health.Transparency = transparency
             end
