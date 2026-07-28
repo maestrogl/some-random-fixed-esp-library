@@ -3,7 +3,6 @@ local runService = game:GetService('RunService')
 local coregui = game:GetService('CoreGui')
 local players = game:GetService('Players')
 local localPlayer = players.LocalPlayer
-local camera = workspace.CurrentCamera
 
 local esp = {
     -- settings
@@ -103,6 +102,7 @@ function esp:draw(a, b)
     end
     return instance
 end
+
 function esp:create(a, b)
     local instance = Instance.new(a)
     if type(b) == 'table' then
@@ -112,13 +112,16 @@ function esp:create(a, b)
     end
     return instance
 end
+
 local folder = esp:create('Folder', { Parent = coregui })
+
 function esp:setproperties(a, b)
     for i, v in next, b do
         a[i] = v;
     end
     return a
 end
+
 function esp:raycast(a, b, c)
     c = type(c) == 'table' and c or {}
     local params = RaycastParams.new();
@@ -130,10 +133,8 @@ function esp:raycast(a, b, c)
     if ray ~= nil then
         if ray.Instance.Transparency >= .250 then
             TINSERT(c, ray.Instance);
-            local newray = self:raycast(a,b,c)
-            if newray ~= nil then
-                ray = newray
-            end
+            -- FIX 4: Explicitly return the recursive result so it doesn't fall through
+            return self:raycast(a,b,c)[cite: 1]
         end
     end
     return ray
@@ -147,7 +148,6 @@ function esp.checkalive(plr)
     if not plr then plr = localPlayer end
     local pass = false
     local char = plr.Character
-    -- Fixed for R6 & R15 compatibility by checking Head transparency instead of LeftUpperArm
     if (char and char:FindFirstChild('Humanoid') and char:FindFirstChild('Head') and char.Humanoid.Health > 0 and char.Head.Transparency == 0) then
         pass = true
     end
@@ -156,29 +156,43 @@ end
 
 function esp.checkteam(plr, bool)
     if not plr then plr = localPlayer end
-    return plr ~= localPlayer and bool or plr.Team ~= localPlayer.Team
+    if plr == localPlayer then return bool end
+    
+    -- FIX 7: Safe team check handling nil teams
+    if plr.Team and localPlayer.Team then
+        return plr.Team ~= localPlayer.Team
+    end
+    return true -- Default to true if teams are not utilized
 end
 
 function esp:checkvisible(instance, origin, params)
     if not params then params = {} end
-    local hit = self:raycast(camera.CFrame.p, (origin.Position - camera.CFrame.p).unit * 500, { unpack(params), camera, localPlayer.Character })
+    local camera = workspace.CurrentCamera -- FIX 2: Dynamic camera reference
+    if not camera then return false end
+    
+    local hit = self:raycast(camera.CFrame.p, (origin.Position - camera.CFrame.p).unit * 500, { unpack(params), camera, localPlayer.Character })[cite: 1]
     return (hit and hit.Instance:IsDescendantOf(instance)) and true or false
 end
 
 function esp:check(plr)
-	if plr == players.LocalPlayer then return false; end;
-	local pass = true;
-	local character = self.getcharacter(plr);
-	if not self.checkalive(plr) then
-		pass = false;
-	elseif esp.limitdistance and (character.PrimaryPart.CFrame.p - workspace.CurrentCamera.CFrame.p).magnitude > esp.maxdistance then
-		pass = false;
-	elseif esp.teamcheck and not self.checkteam(plr, false) then
-		pass = false;
-    elseif esp.visiblecheck and not self:checkvisible(character, character.Head, esp.visiblecheckparams) then
+    if plr == players.LocalPlayer then return false; end;
+    local pass = true;
+    local character = self.getcharacter(plr);
+    local camera = workspace.CurrentCamera
+    local rootPart = character and character:FindFirstChild('HumanoidRootPart') -- FIX 3: Replaced PrimaryPart with HumanoidRootPart[cite: 1]
+
+    if not self.checkalive(plr) then
+        pass = false;
+    elseif esp.limitdistance and rootPart and camera and (rootPart.CFrame.p - camera.CFrame.p).magnitude > esp.maxdistance then
+        pass = false;
+    elseif esp.limitdistance and not rootPart then
+        pass = false;
+    elseif esp.teamcheck and not self.checkteam(plr, false) then
+        pass = false;
+    elseif esp.visiblecheck and not self:checkvisible(character, character:FindFirstChild('Head') or rootPart, esp.visiblecheckparams) then
         pass = false
-	end;
-	return pass;
+    end;
+    return pass;
 end;
 
 function esp:returnoffsets(x, y, minY, z)
@@ -207,18 +221,21 @@ function esp:convertnumrange(val, oldmin, oldmax, newmin, newmax)
 end;
 
 function esp:fadeviadistance(data)
+    local camera = workspace.CurrentCamera -- FIX 2: Dynamic camera reference[cite: 1]
+    if not camera then return 1 end
     return data.limit and 1 - CLAMP(self:convertnumrange(FLOOR(((data.cframe.p - camera.CFrame.p)).magnitude), (data.maxdistance - data.factor), data.maxdistance, 0, 1), 0, 1) or 1;
 end;
 
 function esp:floorvector(vector)
     return NEWVEC2(FLOOR(vector.X),FLOOR(vector.Y))
 end
+
 function esp:rotatevector2(v2, r)
-	local c = COS(r);
-	local s = SIN(r);
-	return NEWVEC2(c * v2.X - s * v2.Y, s * v2.X + c * v2.Y);
+    local c = COS(r);
+    local s = SIN(r);
+    return NEWVEC2(c * v2.X - s * v2.Y, s * v2.X + c * v2.Y);
 end;
---
+
 function esp:add(plr)
     if plr == localPlayer then return end
     local objs = {
@@ -255,6 +272,7 @@ function esp:add(plr)
     objs['chams'] = chams
     self.players[plr.Name] = objs
 end
+
 function esp:disable(plr)
     local objects = self.players[plr.Name];
     if objects then
@@ -267,15 +285,19 @@ function esp:disable(plr)
         end;
     end;
 end;
+
 function esp:remove(plr)
-    local objects = self.players[plr.Name];
+    -- FIX 6: Handle raw string calls and prevent nil indexing
+    local playerName = type(plr) == "string" and plr or plr.Name
+    local objects = self.players[playerName];
     if objects then
         for i, v in next, objects do
-            v:Remove()
+            v:Remove()[cite: 1]
         end;
+        self.players[playerName] = nil;
     end;
-    self.players[plr.Name] = nil;
 end;
+
 -- connections
 function esp:connect(a, callback)
     local c = a:Connect(callback)
@@ -300,22 +322,43 @@ function esp:clearconnections()
 end
 
 function esp:update()
+    local camera = workspace.CurrentCamera -- FIX 2: Dynamic camera reference[cite: 1]
+    if not camera then return end
+
     for plr, drawing in next, esp.players do
         local player = players:FindFirstChild(plr)
-        if not player then esp.players[plr] = nil continue end
+        if not player then 
+            -- FIX 1: Prevent memory leak by removing drawings before clearing the table
+            for _, v in next, drawing do
+                v:Remove()
+            end
+            esp.players[plr] = nil 
+            continue 
+        end
+
         if esp.enabled and esp.checkalive(player) then
             local character = esp.getcharacter(player)
-            local playerName = LEN(plr) > esp.maxchar and esp.shortnames and SUB(plr, 0, esp.maxchar) .. '..' or plr
+            local rootPart = character:FindFirstChild('HumanoidRootPart')
+            
+            -- FIX 3: Safe rootPart check
+            if not rootPart then
+                esp:disable(player)
+                continue
+            end
+
+            -- FIX 5: Changed indexing `0` to `1` for safe string manipulation in Luau
+            local playerName = LEN(plr) > esp.maxchar and esp.shortnames and SUB(plr, 1, esp.maxchar) .. '..' or plr[cite: 1]
             local pass = esp:check(player)
-            local distance = tostring(FLOOR((character.PrimaryPart.CFrame.p - camera.CFrame.p).Magnitude  / 3))  .. 'm'
-            local _, onScreen = camera:WorldToViewportPoint(character['HumanoidRootPart'].Position)
-            local centerMassPos = character['HumanoidRootPart'].CFrame
+            local distance = tostring(FLOOR((rootPart.CFrame.p - camera.CFrame.p).Magnitude  / 3))  .. 'm'
+            local _, onScreen = camera:WorldToViewportPoint(rootPart.Position)
+            local centerMassPos = rootPart.CFrame
             local transparency = esp:fadeviadistance({
                 limit = esp.limitdistance,
                 cframe = centerMassPos,
                 maxdistance = esp.maxdistance,
                 factor = esp.fadefactor
             })
+            
             local kevlar = 0
             if player:FindFirstChild('Kevlar') then
                 kevlar = player.Kevlar.Value
@@ -348,6 +391,7 @@ function esp:update()
                 drawing.arrow.PointC = c;
                 drawing.arrow.Color = esp[ flag .. 'arrow'][2];
                 drawing.arrow.Transparency = not onScreen and esp[ flag .. 'arrow'][3] or 0;
+                
                 if esp.arrowinfo then
                     local smallestX, smallestY, biggestX, biggestY = esp:returntriangleoffsets(drawing.arrow)
                     -- healthbar
@@ -422,9 +466,7 @@ function esp:update()
             local smallestX, biggestX = math.huge, -math.huge
             local smallestY, biggestY = math.huge, -math.huge
 
-            -- Fixed to locate parts regardless of RigType (R6 or R15 fallback)
             local head = character:FindFirstChild('Head')
-            local rootPart = character:FindFirstChild('HumanoidRootPart')
             local rightArm = character:FindFirstChild('RightHand') or character:FindFirstChild('Right Arm') or rootPart
             local leftArm = character:FindFirstChild('LeftHand') or character:FindFirstChild('Left Arm') or rootPart
             local rightLeg = character:FindFirstChild('RightFoot') or character:FindFirstChild('Right Leg') or rootPart
@@ -439,7 +481,7 @@ function esp:update()
             local minY = minY1 > minY2 and minY1 or minY2
             local minX = x1 < x2 and x1 or x2
 
-            local offsets = esp:returnoffsets(minX, y, minY, character['HumanoidRootPart'].Size.Z / 2)
+            local offsets = esp:returnoffsets(minX, y, minY, rootPart.Size.Z / 2)
 
             for i, v in next, offsets do
                 local pos = camera:WorldToViewportPoint(centerMassPos * v.p)
@@ -554,7 +596,6 @@ function esp:update()
             drawing.weapon_outline.Visible = esp.outlines and drawing.weapon.Visible
             if drawing.weapon.Visible then
                 
-                -- Safely check for the weapon
                 local equippedTool = character:FindFirstChild("EquippedTool")
                 local standardTool = character:FindFirstChildOfClass("Tool")
                 
@@ -586,9 +627,11 @@ end
 for i, plr in next, players:GetPlayers() do
     esp:add(plr)
 end
+
 esp:connect(players.PlayerAdded, function(plr)
     esp:add(plr)
 end)
+
 esp:connect(players.PlayerRemoving, function(plr)
     esp:remove(plr)
 end)
