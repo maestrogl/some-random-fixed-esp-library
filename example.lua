@@ -44,7 +44,7 @@ esp.textsize = 14               -- Size of all text elements (names, distance, h
 
 esp.arrowradius = 400           -- Distance from center of screen to render off-screen arrows (in pixels)
 esp.arrowsize = 20              -- Size of the arrow triangle
-esp.arrowinfo = true            -- Renders player info (name/health/kevlar) next to the off-screen arrow
+esp.arrowinfo = false            -- Renders player info (name/health/kevlar) next to the off-screen arrow
 
 -- ============================================================================
 --                        TEAMMATE ESP SETTINGS
@@ -54,20 +54,20 @@ esp.arrowinfo = true            -- Renders player info (name/health/kevlar) next
 -- Box fill transparency: 0 = opaque, 1 = invisible
 esp.team_boxes = {
     true,                                    -- [1] Enable/Disable boxes
-    Color3.fromRGB(0, 255, 150),             -- [2] Box outline color (the border)
+    Color3.fromRGB(255, 255, 255),             -- [2] Box outline color (the border)
     Color3.fromRGB(0, 150, 100),             -- [3] Box fill color (inside color)
-    0.75                                     -- [4] Box fill transparency (0 = solid, 1 = invisible)
+    0                                    -- [4] Box fill transparency (0 = solid, 1 = invisible)
 }
 
 -- CHAMS (Highlight): {Enabled, FillColor, OutlineColor, FillTransparency, OutlineTransparency, AlwaysOnTop}
 -- AlwaysOnTop: true = visible through walls, false = occluded by walls
 esp.team_chams = {
-    true,                                    -- [1] Enable/Disable chams
+    false,                                    -- [1] Enable/Disable chams
     Color3.fromRGB(100, 255, 100),           -- [2] Chams fill color
-    Color3.fromRGB(0, 50, 0),                -- [3] Chams outline color
-    0.5,                                     -- [4] Chams fill transparency
+    Color3.fromRGB(0, 0, 0),                -- [3] Chams outline color
+    1,                                     -- [4] Chams fill transparency
     0,                                       -- [5] Chams outline transparency
-    true                                     -- [6] Visible through walls (AlwaysOnTop)
+    false                                     -- [6] Visible through walls (AlwaysOnTop)
 }
 
 -- HEALTH BAR: {Enabled, HealthyColor, DamagedColor}
@@ -80,14 +80,14 @@ esp.team_healthbar = {
 
 -- KEVLAR BAR: {Enabled, HighKevlarColor, LowKevlarColor}
 esp.team_kevlarbar = {
-    true,                                    -- [1] Enable/Disable kevlar bar
+    false,                                    -- [1] Enable/Disable kevlar bar
     Color3.fromRGB(0, 150, 255),             -- [2] Full kevlar color
     Color3.fromRGB(0, 0, 255)                -- [3] Low kevlar color
 }
 
 -- OFF-SCREEN ARROW: {Enabled, ArrowColor, Transparency}
 esp.team_arrow = {
-    true,                                    -- [1] Enable/Disable arrow
+    false,                                    -- [1] Enable/Disable arrow
     Color3.fromRGB(0, 255, 150),             -- [2] Arrow color
     0.2                                      -- [3] Arrow transparency
 }
@@ -114,19 +114,19 @@ esp.team_health = true                       -- Display health value as text
 -- BOXES: {Enabled, OutlineColor, FillColor, FillTransparency}
 esp.enemy_boxes = {
     true,                                    -- [1] Enable/Disable boxes
-    Color3.fromRGB(255, 0, 0),               -- [2] Box outline color (red)
+    Color3.fromRGB(255, 255, 255),               -- [2] Box outline color (red)
     Color3.fromRGB(150, 0, 0),               -- [3] Box fill color (dark red)
-    0.75                                     -- [4] Box fill transparency
+    0                                     -- [4] Box fill transparency
 }
 
 -- CHAMS (Highlight): {Enabled, FillColor, OutlineColor, FillTransparency, OutlineTransparency, AlwaysOnTop}
 esp.enemy_chams = {
-    true,                                    -- [1] Enable/Disable chams
+    false,                                    -- [1] Enable/Disable chams
     Color3.fromRGB(255, 50, 50),             -- [2] Chams fill color
     Color3.fromRGB(100, 0, 0),               -- [3] Chams outline color
-    0.5,                                     -- [4] Chams fill transparency
+    1,                                     -- [4] Chams fill transparency
     0,                                       -- [5] Chams outline transparency
-    true                                     -- [6] Visible through walls
+    false                                     -- [6] Visible through walls
 }
 
 -- HEALTH BAR: {Enabled, HealthyColor, DamagedColor}
@@ -145,7 +145,7 @@ esp.enemy_kevlarbar = {
 
 -- OFF-SCREEN ARROW: {Enabled, ArrowColor, Transparency}
 esp.enemy_arrow = {
-    true,                                    -- [1] Enable/Disable arrow
+    false,                                    -- [1] Enable/Disable arrow
     Color3.fromRGB(255, 50, 50),             -- [2] Arrow color (red)
     0.2                                      -- [3] Arrow transparency
 }
@@ -176,17 +176,17 @@ table.insert(esp.priority_players, "A_Target_PlayerName")  -- Add your target pl
 -- BOXES: {Enabled, OutlineColor, FillColor, FillTransparency}
 esp.priority_boxes = {
     true,                                    -- [1] Enable/Disable boxes
-    Color3.fromRGB(255, 215, 0),             -- [2] Box outline color (gold)
+    Color3.fromRGB(255, 255, 255),             -- [2] Box outline color (gold)
     Color3.fromRGB(200, 150, 0),             -- [3] Box fill color (dark gold)
-    0.5                                      -- [4] Box fill transparency
+    0                                      -- [4] Box fill transparency
 }
 
 -- CHAMS (Highlight): {Enabled, FillColor, OutlineColor, FillTransparency, OutlineTransparency, AlwaysOnTop}
 esp.priority_chams = {
-    true,                                    -- [1] Enable/Disable chams
+    false,                                    -- [1] Enable/Disable chams
     Color3.fromRGB(255, 215, 0),             -- [2] Chams fill color (gold)
     Color3.fromRGB(150, 100, 0),             -- [3] Chams outline color
-    0.2,                                     -- [4] Chams fill transparency
+    1,                                     -- [4] Chams fill transparency
     0,                                       -- [5] Chams outline transparency
     true                                     -- [6] Visible through walls
 }
@@ -200,7 +200,7 @@ esp.priority_healthbar = {
 
 -- KEVLAR BAR: {Enabled, HighKevlarColor, LowKevlarColor}
 esp.priority_kevlarbar = {
-    true,                                    -- [1] Enable/Disable kevlar bar
+    false,                                    -- [1] Enable/Disable kevlar bar
     Color3.fromRGB(0, 150, 255),             -- [2] Full kevlar color
     Color3.fromRGB(0, 0, 255)                -- [3] Low kevlar color
 }
@@ -208,7 +208,7 @@ esp.priority_kevlarbar = {
 -- OFF-SCREEN ARROW: {Enabled, ArrowColor, Transparency}
 -- 0 transparency makes priority arrows always fully visible
 esp.priority_arrow = {
-    true,                                    -- [1] Enable/Disable arrow
+    false,                                    -- [1] Enable/Disable arrow
     Color3.fromRGB(255, 215, 0),             -- [2] Arrow color (gold)
     0                                        -- [3] Arrow transparency (0 = always visible)
 }
