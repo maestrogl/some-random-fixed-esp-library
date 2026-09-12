@@ -108,13 +108,6 @@ end
 
 local folder = esp:create('Folder', { Parent = coregui })
 
-function esp:setproperties(a, b)
-    for i, v in next, b do
-        a[i] = v;
-    end
-    return a
-end
-
 function esp:raycast(a, b, c)
     c = type(c) == 'table' and c or {}
     local params = RaycastParams.new();
@@ -207,7 +200,9 @@ function esp:returntriangleoffsets(triangle)
 end
 
 function esp:convertnumrange(val, oldmin, oldmax, newmin, newmax)
-    return (val - oldmin) * (newmax - newmin) / (oldmax - oldmin) + newmin;
+    local range = oldmax - oldmin
+    if range == 0 then return newmin end
+    return (val - oldmin) * (newmax - newmin) / range + newmin;
 end;
 
 function esp:fadeviadistance(data)
@@ -324,11 +319,12 @@ function esp:update()
     local camera = workspace.CurrentCamera
     if not camera then return end
 
+    local toRemove = {}
     for plr, drawing in next, esp.players do
         local player = players:FindFirstChild(plr)
         if not player then 
             for _, v in next, drawing do v:Remove() end
-            esp.players[plr] = nil 
+            TINSERT(toRemove, plr)
             continue 
         end
 
@@ -460,7 +456,7 @@ function esp:update()
             local smallestX, biggestX = math.huge, -math.huge
             local smallestY, biggestY = math.huge, -math.huge
 
-            local head = character:FindFirstChild('Head')
+            local head = character:FindFirstChild('Head') or rootPart
             local rightArm = character:FindFirstChild('RightHand') or character:FindFirstChild('Right Arm') or rootPart
             local leftArm = character:FindFirstChild('LeftHand') or character:FindFirstChild('Left Arm') or rootPart
             local rightLeg = character:FindFirstChild('RightFoot') or character:FindFirstChild('Right Leg') or rootPart
@@ -621,6 +617,10 @@ function esp:update()
         else
             esp:disable(player)
         end
+    end
+    
+    for _, plr in next, toRemove do
+        esp.players[plr] = nil
     end
 end
 
