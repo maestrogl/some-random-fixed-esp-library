@@ -66,7 +66,7 @@ esp.enemy_weapon = {true, Color3.fromRGB(255, 150, 150)}
 esp.enemy_distance = true
 esp.enemy_health = true
 
--- Priority players to highlight
+--poop
 table.insert(esp.priority_players, "A_Target_PlayerName")
 
 esp.priority_chams = {true, Color3.fromRGB(255, 215, 0), Color3.fromRGB(150, 100, 0), 0.2, 0, true}

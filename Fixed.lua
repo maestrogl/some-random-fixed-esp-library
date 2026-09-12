@@ -108,6 +108,13 @@ end
 
 local folder = esp:create('Folder', { Parent = coregui })
 
+function esp:setproperties(a, b)
+    for i, v in next, b do
+        a[i] = v;
+    end
+    return a
+end
+
 function esp:raycast(a, b, c)
     c = type(c) == 'table' and c or {}
     local params = RaycastParams.new();
@@ -200,9 +207,7 @@ function esp:returntriangleoffsets(triangle)
 end
 
 function esp:convertnumrange(val, oldmin, oldmax, newmin, newmax)
-    local range = oldmax - oldmin
-    if range == 0 then return newmin end
-    return (val - oldmin) * (newmax - newmin) / range + newmin;
+    return (val - oldmin) * (newmax - newmin) / (oldmax - oldmin) + newmin;
 end;
 
 function esp:fadeviadistance(data)
@@ -319,12 +324,11 @@ function esp:update()
     local camera = workspace.CurrentCamera
     if not camera then return end
 
-    local toRemove = {}
     for plr, drawing in next, esp.players do
         local player = players:FindFirstChild(plr)
         if not player then 
             for _, v in next, drawing do v:Remove() end
-            TINSERT(toRemove, plr)
+            esp.players[plr] = nil 
             continue 
         end
 
@@ -387,7 +391,7 @@ function esp:update()
                     local smallestX, smallestY, biggestX, biggestY = esp:returntriangleoffsets(drawing.arrow)
                     
                     local arrowOutlineSizeY = biggestY - smallestY
-                    drawing.arrow_bar.Size = esp:floorvector(NEWVEC2(1, health / maxHealth * arrowOutlineSizeY))
+                    drawing.arrow_bar.Size = esp:floorvector(NEWVEC2(1, ( - health / maxHealth * ( arrowOutlineSizeY + 2)) + 3))
                     drawing.arrow_bar.Position = esp:floorvector(NEWVEC2(smallestX - 3, smallestY + arrowOutlineSizeY))
                     
                     drawing.arrow_bar.Visible = not onScreen and drawing.arrow.Visible and esp[ flag .. 'healthbar'][1]
@@ -396,7 +400,7 @@ function esp:update()
                     if drawing.arrow_bar.Visible then
                         drawing.arrow_bar.Color = esp[ flag .. 'healthbar'][3]:Lerp(esp[ flag .. 'healthbar'][2], health / maxHealth)
                         drawing.arrow_bar.Transparency = transparency
-                        drawing.arrow_bar_inline.Size = esp:floorvector(NEWVEC2(1, arrowOutlineSizeY))
+                        drawing.arrow_bar_inline.Size = esp:floorvector(NEWVEC2(1, ( - 1 * ( arrowOutlineSizeY + 2)) + 3))
                         drawing.arrow_bar_inline.Position = drawing.arrow_bar.Position
                         drawing.arrow_bar_inline.Transparency = transparency
                         drawing.arrow_bar_outline.Size = esp:floorvector(NEWVEC2(1, arrowOutlineSizeY))
@@ -404,7 +408,7 @@ function esp:update()
                         drawing.arrow_bar_outline.Transparency = transparency
                     end
 
-                    drawing.arrow_kevlarbar.Size = esp:floorvector(NEWVEC2(MAX(kevlar / maxKevlar * (biggestX - smallestX), 0), 1))
+                    drawing.arrow_kevlarbar.Size = esp:floorvector(NEWVEC2(( kevlar / maxKevlar * ( biggestX - smallestX)), 1))
                     drawing.arrow_kevlarbar.Position = esp:floorvector(NEWVEC2(smallestX, biggestY + 2))
 
                     drawing.arrow_kevlarbar.Visible = not onScreen and drawing.arrow.Visible and esp[ flag .. 'kevlarbar'][1]
@@ -456,7 +460,7 @@ function esp:update()
             local smallestX, biggestX = math.huge, -math.huge
             local smallestY, biggestY = math.huge, -math.huge
 
-            local head = character:FindFirstChild('Head') or rootPart
+            local head = character:FindFirstChild('Head')
             local rightArm = character:FindFirstChild('RightHand') or character:FindFirstChild('Right Arm') or rootPart
             local leftArm = character:FindFirstChild('LeftHand') or character:FindFirstChild('Left Arm') or rootPart
             local rightLeg = character:FindFirstChild('RightFoot') or character:FindFirstChild('Right Leg') or rootPart
@@ -483,10 +487,10 @@ function esp:update()
 
             -- Calculate standard boundaries regardless of visibility
             local outlineSizeY = biggestY - smallestY
-            drawing.bar.Size = esp:floorvector(NEWVEC2(1, health / maxHealth * outlineSizeY))
+            drawing.bar.Size = esp:floorvector(NEWVEC2(1, ( - health / maxHealth * ( outlineSizeY + 2)) + 3))
             drawing.bar.Position = esp:floorvector(NEWVEC2(smallestX - 3, smallestY + outlineSizeY))
             
-            drawing.kevlarbar.Size = esp:floorvector(NEWVEC2(MAX(kevlar / maxKevlar * (biggestX - smallestX), 0), 1))
+            drawing.kevlarbar.Size = esp:floorvector(NEWVEC2(( kevlar / maxKevlar * ( biggestX - smallestX)), 1))
             drawing.kevlarbar.Position = esp:floorvector(NEWVEC2(smallestX, biggestY + 2))
 
             -- box
@@ -516,7 +520,7 @@ function esp:update()
             if drawing.bar.Visible then
                 drawing.bar.Color = esp[ flag .. 'healthbar'][3]:Lerp(esp[ flag .. 'healthbar'][2], health / maxHealth)
                 drawing.bar.Transparency = transparency
-                drawing.bar_inline.Size = esp:floorvector(NEWVEC2(1, outlineSizeY))
+                drawing.bar_inline.Size = esp:floorvector(NEWVEC2(1, ( - 1 * ( outlineSizeY + 2)) + 3))
                 drawing.bar_inline.Position = drawing.bar.Position
                 drawing.bar_inline.Transparency = transparency
                 drawing.bar_outline.Size = esp:floorvector(NEWVEC2(1, outlineSizeY))
@@ -531,7 +535,7 @@ function esp:update()
             if drawing.kevlarbar.Visible then
                 drawing.kevlarbar.Color = esp[ flag .. 'kevlarbar'][3]:Lerp(esp[ flag .. 'kevlarbar'][2], kevlar / maxKevlar)
                 drawing.kevlarbar.Transparency = transparency
-                drawing.kevlarbar_inline.Size = esp:floorvector(NEWVEC2(MAX(kevlar / maxKevlar * (biggestX - smallestX), 0), 1))
+                drawing.kevlarbar_inline.Size = esp:floorvector(NEWVEC2(( 1 * ( biggestX - smallestX)), 1))
                 drawing.kevlarbar_inline.Position = drawing.kevlarbar.Position
                 drawing.kevlarbar_inline.Transparency = transparency
                 drawing.kevlarbar_outline.Size = esp:floorvector(NEWVEC2(biggestX - smallestX, 1))
@@ -617,10 +621,6 @@ function esp:update()
         else
             esp:disable(player)
         end
-    end
-    
-    for _, plr in next, toRemove do
-        esp.players[plr] = nil
     end
 end
 
