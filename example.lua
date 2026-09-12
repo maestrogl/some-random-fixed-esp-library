@@ -1,10 +1,6 @@
--- Load Bracket UI Library
-local Bracket = loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Bracket/main/BracketV32.lua"))()
-Bracket:Notification()
-Bracket:Notification2()
-
--- Load ESP Library
 local espURL = "https://raw.githubusercontent.com/maestrogl/some-random-fixed-esp-library/refs/heads/main/Fixed.lua"
+
+-- 1. Safely load the script (prevents "attempt to call a nil value" error)
 local response = game:HttpGet(espURL)
 local compiledFunction, errorMessage = loadstring(response)
 
@@ -15,311 +11,73 @@ end
 
 local esp = compiledFunction()
 
+-- If you re-execute this script multiple times, it's best practice to unload the previous instance.
 if getgenv().shared_esp_instance then
     getgenv().shared_esp_instance:Unload()
 end
 getgenv().shared_esp_instance = esp
 
--- Create UI Window
-local Window = Bracket:Window({Name = "ESP Configuration", Enabled = true, Color = Color3.fromRGB(255, 100, 50), Size = UDim2.new(0, 550, 0, 600), Position = UDim2.new(0.5, -275, 0.5, -300)})
+--global
+esp.enabled = true
+esp.teamcheck = false       -- true = only draw enemies | false = draw everyone
+esp.visiblecheck = false    -- Raycasts to see if the player is behind a wall
+esp.outlines = true         -- Adds black outlines to all text and bars
+esp.limitdistance = false   -- Set true to stop drawing players extremely far away
+esp.maxdistance = 1500      -- The distance cutoff (in studs)
+esp.shortnames = false      -- Truncates names
+esp.maxchar = 6             -- Limit of characters if shortnames is true
+esp.font = 'Plex'           -- 'Plex', 'UI', 'System', or 'Monospace'
+esp.textsize = 14
 
--- GENERAL TAB
-local GeneralTab = Window:Tab({Name = "General"})
+-- Off-Screen Arrow Setup
+esp.arrowradius = 400       -- Distance from center of screen to render arrows
+esp.arrowsize = 20          -- Size of the triangle
+esp.arrowinfo = true        -- Renders name/health/kevlar NEXT to the off-screen arrow
 
-GeneralTab:Divider({Text = "Main Settings", Side = "Left"})
+--teamconfig
+-- Array arguments: {Enabled, Main Color, Secondary Color/Outline, Fill Transparency, Outline Transparency, AlwaysOnTop}
+esp.team_chams = {true, Color3.fromRGB(100, 255, 100), Color3.fromRGB(0, 50, 0), 0.5, 0, true}
+esp.team_boxes = {true, Color3.fromRGB(0, 255, 150), Color3.fromRGB(0, 0, 0), 0.75}
 
-GeneralTab:Toggle({Name = "ESP Enabled", Side = "Left", Value = esp.enabled, Callback = function(Bool)
-    esp.enabled = Bool
-end})
+-- Array arguments: {Enabled, High Health Color, Low Health Color}
+esp.team_healthbar = {true, Color3.fromRGB(0, 255, 0), Color3.fromRGB(255, 0, 0)}
+esp.team_kevlarbar = {true, Color3.fromRGB(0, 150, 255), Color3.fromRGB(0, 0, 255)}
 
-GeneralTab:Toggle({Name = "Team Check", Side = "Left", Value = esp.teamcheck, Callback = function(Bool)
-    esp.teamcheck = Bool
-end}):ToolTip("Only draw enemies")
+-- Array arguments: {Enabled, Arrow Color, Transparency}
+esp.team_arrow = {true, Color3.fromRGB(0, 255, 150), 0.2}
 
-GeneralTab:Toggle({Name = "Visible Check", Side = "Left", Value = esp.visiblecheck, Callback = function(Bool)
-    esp.visiblecheck = Bool
-end}):ToolTip("Raycast to check if behind wall")
+-- Text elements: {Enabled, Text Color}
+esp.team_names = {true, Color3.fromRGB(255, 255, 255)}
+esp.team_weapon = {true, Color3.fromRGB(200, 200, 200)}
+esp.team_distance = true
+esp.team_health = true
 
-GeneralTab:Toggle({Name = "Outlines", Side = "Left", Value = esp.outlines, Callback = function(Bool)
-    esp.outlines = Bool
-end}):ToolTip("Black outlines on text/bars")
+--enemy config 
+esp.enemy_chams = {true, Color3.fromRGB(255, 50, 50), Color3.fromRGB(100, 0, 0), 0.5, 0, true}
+esp.enemy_boxes = {true, Color3.fromRGB(255, 0, 0), Color3.fromRGB(0, 0, 0), 0.75}
 
-GeneralTab:Divider({Text = "Distance Settings", Side = "Left"})
+esp.enemy_healthbar = {true, Color3.fromRGB(0, 255, 0), Color3.fromRGB(255, 0, 0)}
+esp.enemy_kevlarbar = {false, Color3.fromRGB(0, 150, 255), Color3.fromRGB(0, 0, 255)}
 
-GeneralTab:Toggle({Name = "Limit Distance", Side = "Left", Value = esp.limitdistance, Callback = function(Bool)
-    esp.limitdistance = Bool
-end})
+esp.enemy_arrow = {true, Color3.fromRGB(255, 50, 50), 0.2}
 
-GeneralTab:Slider({Name = "Max Distance", Side = "Left", Min = 100, Max = 5000, Value = esp.maxdistance, Precise = 0, Unit = " studs", Callback = function(Number)
-    esp.maxdistance = Number
-end})
+esp.enemy_names = {true, Color3.fromRGB(255, 255, 255)}
+esp.enemy_weapon = {true, Color3.fromRGB(255, 150, 150)}
+esp.enemy_distance = true
+esp.enemy_health = true
 
-GeneralTab:Divider({Text = "Text Settings", Side = "Left"})
+-- Priority players to highlight (special color highlighting)
+table.insert(esp.priority_players, "A_Target_PlayerName")
 
-GeneralTab:Toggle({Name = "Short Names", Side = "Left", Value = esp.shortnames, Callback = function(Bool)
-    esp.shortnames = Bool
-end}):ToolTip("Truncate player names")
+esp.priority_chams = {true, Color3.fromRGB(255, 215, 0), Color3.fromRGB(150, 100, 0), 0.2, 0, true}
+esp.priority_boxes = {true, Color3.fromRGB(255, 215, 0), Color3.fromRGB(0, 0, 0), 0.5}
 
-GeneralTab:Slider({Name = "Max Characters", Side = "Left", Min = 1, Max = 20, Value = esp.maxchar, Precise = 0, Callback = function(Number)
-    esp.maxchar = Number
-end})
+esp.priority_healthbar = {true, Color3.fromRGB(0, 255, 0), Color3.fromRGB(255, 0, 0)}
+esp.priority_kevlarbar = {false, Color3.fromRGB(0, 150, 255), Color3.fromRGB(0, 0, 255)}
 
-GeneralTab:Slider({Name = "Text Size", Side = "Left", Min = 8, Max = 32, Value = esp.textsize, Precise = 0, Callback = function(Number)
-    esp.textsize = Number
-end})
+esp.priority_arrow = {true, Color3.fromRGB(255, 215, 0), 0} -- 0 transparency so it stands out
 
-local FontOptions = {"Plex", "UI", "System", "Monospace"}
-GeneralTab:Dropdown({Name = "Font", Side = "Left", Default = FontOptions, List = {
-    {Name = "Plex", Mode = "Toggle", Value = esp.font == "Plex", Callback = function() esp.font = "Plex" end},
-    {Name = "UI", Mode = "Toggle", Value = esp.font == "UI", Callback = function() esp.font = "UI" end},
-    {Name = "System", Mode = "Toggle", Value = esp.font == "System", Callback = function() esp.font = "System" end},
-    {Name = "Monospace", Mode = "Toggle", Value = esp.font == "Monospace", Callback = function() esp.font = "Monospace" end}
-}})
-
-GeneralTab:Divider({Text = "Arrow Settings", Side = "Right"})
-
-GeneralTab:Slider({Name = "Arrow Radius", Side = "Right", Min = 100, Max = 1000, Value = esp.arrowradius, Precise = 0, Unit = " px", Callback = function(Number)
-    esp.arrowradius = Number
-end}):ToolTip("Distance from screen center")
-
-GeneralTab:Slider({Name = "Arrow Size", Side = "Right", Min = 5, Max = 50, Value = esp.arrowsize, Precise = 0, Unit = " px", Callback = function(Number)
-    esp.arrowsize = Number
-end})
-
-GeneralTab:Toggle({Name = "Arrow Info", Side = "Right", Value = esp.arrowinfo, Callback = function(Bool)
-    esp.arrowinfo = Bool
-end}):ToolTip("Show name/health next to arrow")
-
--- TEAM TAB
-local TeamTab = Window:Tab({Name = "Team"})
-
-TeamTab:Divider({Text = "Chams", Side = "Left"})
-TeamTab:Toggle({Name = "Chams Enabled", Side = "Left", Value = esp.team_chams[1], Callback = function(Bool)
-    esp.team_chams[1] = Bool
-end})
-TeamTab:Colorpicker({Name = "Chams Color", Side = "Left", Color = esp.team_chams[2], Callback = function(Color)
-    esp.team_chams[2] = Color
-end})
-TeamTab:Slider({Name = "Chams Fill Transparency", Side = "Left", Min = 0, Max = 1, Value = esp.team_chams[4], Precise = 2, Callback = function(Number)
-    esp.team_chams[4] = Number
-end})
-
-TeamTab:Divider({Text = "Boxes", Side = "Left"})
-TeamTab:Toggle({Name = "Boxes Enabled", Side = "Left", Value = esp.team_boxes[1], Callback = function(Bool)
-    esp.team_boxes[1] = Bool
-end})
-TeamTab:Colorpicker({Name = "Boxes Color", Side = "Left", Color = esp.team_boxes[2], Callback = function(Color)
-    esp.team_boxes[2] = Color
-end})
-
-TeamTab:Divider({Text = "Health Bar", Side = "Left"})
-TeamTab:Toggle({Name = "Health Bar Enabled", Side = "Left", Value = esp.team_healthbar[1], Callback = function(Bool)
-    esp.team_healthbar[1] = Bool
-end})
-TeamTab:Colorpicker({Name = "Health High Color", Side = "Left", Color = esp.team_healthbar[2], Callback = function(Color)
-    esp.team_healthbar[2] = Color
-end})
-TeamTab:Colorpicker({Name = "Health Low Color", Side = "Left", Color = esp.team_healthbar[3], Callback = function(Color)
-    esp.team_healthbar[3] = Color
-end})
-
-TeamTab:Divider({Text = "Kevlar Bar", Side = "Right"})
-TeamTab:Toggle({Name = "Kevlar Bar Enabled", Side = "Right", Value = esp.team_kevlarbar[1], Callback = function(Bool)
-    esp.team_kevlarbar[1] = Bool
-end})
-TeamTab:Colorpicker({Name = "Kevlar High Color", Side = "Right", Color = esp.team_kevlarbar[2], Callback = function(Color)
-    esp.team_kevlarbar[2] = Color
-end})
-TeamTab:Colorpicker({Name = "Kevlar Low Color", Side = "Right", Color = esp.team_kevlarbar[3], Callback = function(Color)
-    esp.team_kevlarbar[3] = Color
-end})
-
-TeamTab:Divider({Text = "Arrow", Side = "Right"})
-TeamTab:Toggle({Name = "Arrow Enabled", Side = "Right", Value = esp.team_arrow[1], Callback = function(Bool)
-    esp.team_arrow[1] = Bool
-end})
-TeamTab:Colorpicker({Name = "Arrow Color", Side = "Right", Color = esp.team_arrow[2], Callback = function(Color)
-    esp.team_arrow[2] = Color
-end})
-TeamTab:Slider({Name = "Arrow Transparency", Side = "Right", Min = 0, Max = 1, Value = esp.team_arrow[3], Precise = 2, Callback = function(Number)
-    esp.team_arrow[3] = Number
-end})
-
-TeamTab:Divider({Text = "Text Elements", Side = "Left"})
-TeamTab:Toggle({Name = "Names Enabled", Side = "Left", Value = esp.team_names[1], Callback = function(Bool)
-    esp.team_names[1] = Bool
-end})
-TeamTab:Colorpicker({Name = "Names Color", Side = "Left", Color = esp.team_names[2], Callback = function(Color)
-    esp.team_names[2] = Color
-end})
-
-TeamTab:Toggle({Name = "Weapon Enabled", Side = "Left", Value = esp.team_weapon[1], Callback = function(Bool)
-    esp.team_weapon[1] = Bool
-end})
-TeamTab:Colorpicker({Name = "Weapon Color", Side = "Left", Color = esp.team_weapon[2], Callback = function(Color)
-    esp.team_weapon[2] = Color
-end})
-
-TeamTab:Toggle({Name = "Show Distance", Side = "Right", Value = esp.team_distance, Callback = function(Bool)
-    esp.team_distance = Bool
-end})
-
-TeamTab:Toggle({Name = "Show Health", Side = "Right", Value = esp.team_health, Callback = function(Bool)
-    esp.team_health = Bool
-end})
-
--- ENEMY TAB
-local EnemyTab = Window:Tab({Name = "Enemy"})
-
-EnemyTab:Divider({Text = "Chams", Side = "Left"})
-EnemyTab:Toggle({Name = "Chams Enabled", Side = "Left", Value = esp.enemy_chams[1], Callback = function(Bool)
-    esp.enemy_chams[1] = Bool
-end})
-EnemyTab:Colorpicker({Name = "Chams Color", Side = "Left", Color = esp.enemy_chams[2], Callback = function(Color)
-    esp.enemy_chams[2] = Color
-end})
-EnemyTab:Slider({Name = "Chams Fill Transparency", Side = "Left", Min = 0, Max = 1, Value = esp.enemy_chams[4], Precise = 2, Callback = function(Number)
-    esp.enemy_chams[4] = Number
-end})
-
-EnemyTab:Divider({Text = "Boxes", Side = "Left"})
-EnemyTab:Toggle({Name = "Boxes Enabled", Side = "Left", Value = esp.enemy_boxes[1], Callback = function(Bool)
-    esp.enemy_boxes[1] = Bool
-end})
-EnemyTab:Colorpicker({Name = "Boxes Color", Side = "Left", Color = esp.enemy_boxes[2], Callback = function(Color)
-    esp.enemy_boxes[2] = Color
-end})
-
-EnemyTab:Divider({Text = "Health Bar", Side = "Left"})
-EnemyTab:Toggle({Name = "Health Bar Enabled", Side = "Left", Value = esp.enemy_healthbar[1], Callback = function(Bool)
-    esp.enemy_healthbar[1] = Bool
-end})
-EnemyTab:Colorpicker({Name = "Health High Color", Side = "Left", Color = esp.enemy_healthbar[2], Callback = function(Color)
-    esp.enemy_healthbar[2] = Color
-end})
-EnemyTab:Colorpicker({Name = "Health Low Color", Side = "Left", Color = esp.enemy_healthbar[3], Callback = function(Color)
-    esp.enemy_healthbar[3] = Color
-end})
-
-EnemyTab:Divider({Text = "Kevlar Bar", Side = "Right"})
-EnemyTab:Toggle({Name = "Kevlar Bar Enabled", Side = "Right", Value = esp.enemy_kevlarbar[1], Callback = function(Bool)
-    esp.enemy_kevlarbar[1] = Bool
-end})
-EnemyTab:Colorpicker({Name = "Kevlar High Color", Side = "Right", Color = esp.enemy_kevlarbar[2], Callback = function(Color)
-    esp.enemy_kevlarbar[2] = Color
-end})
-EnemyTab:Colorpicker({Name = "Kevlar Low Color", Side = "Right", Color = esp.enemy_kevlarbar[3], Callback = function(Color)
-    esp.enemy_kevlarbar[3] = Color
-end})
-
-EnemyTab:Divider({Text = "Arrow", Side = "Right"})
-EnemyTab:Toggle({Name = "Arrow Enabled", Side = "Right", Value = esp.enemy_arrow[1], Callback = function(Bool)
-    esp.enemy_arrow[1] = Bool
-end})
-EnemyTab:Colorpicker({Name = "Arrow Color", Side = "Right", Color = esp.enemy_arrow[2], Callback = function(Color)
-    esp.enemy_arrow[2] = Color
-end})
-EnemyTab:Slider({Name = "Arrow Transparency", Side = "Right", Min = 0, Max = 1, Value = esp.enemy_arrow[3], Precise = 2, Callback = function(Number)
-    esp.enemy_arrow[3] = Number
-end})
-
-EnemyTab:Divider({Text = "Text Elements", Side = "Left"})
-EnemyTab:Toggle({Name = "Names Enabled", Side = "Left", Value = esp.enemy_names[1], Callback = function(Bool)
-    esp.enemy_names[1] = Bool
-end})
-EnemyTab:Colorpicker({Name = "Names Color", Side = "Left", Color = esp.enemy_names[2], Callback = function(Color)
-    esp.enemy_names[2] = Color
-end})
-
-EnemyTab:Toggle({Name = "Weapon Enabled", Side = "Left", Value = esp.enemy_weapon[1], Callback = function(Bool)
-    esp.enemy_weapon[1] = Bool
-end})
-EnemyTab:Colorpicker({Name = "Weapon Color", Side = "Left", Color = esp.enemy_weapon[2], Callback = function(Color)
-    esp.enemy_weapon[2] = Color
-end})
-
-EnemyTab:Toggle({Name = "Show Distance", Side = "Right", Value = esp.enemy_distance, Callback = function(Bool)
-    esp.enemy_distance = Bool
-end})
-
-EnemyTab:Toggle({Name = "Show Health", Side = "Right", Value = esp.enemy_health, Callback = function(Bool)
-    esp.enemy_health = Bool
-end})
-
--- PRIORITY TAB
-local PriorityTab = Window:Tab({Name = "Priority"})
-
-PriorityTab:Divider({Text = "Chams", Side = "Left"})
-PriorityTab:Toggle({Name = "Chams Enabled", Side = "Left", Value = esp.priority_chams[1], Callback = function(Bool)
-    esp.priority_chams[1] = Bool
-end})
-PriorityTab:Colorpicker({Name = "Chams Color", Side = "Left", Color = esp.priority_chams[2], Callback = function(Color)
-    esp.priority_chams[2] = Color
-end})
-PriorityTab:Slider({Name = "Chams Fill Transparency", Side = "Left", Min = 0, Max = 1, Value = esp.priority_chams[4], Precise = 2, Callback = function(Number)
-    esp.priority_chams[4] = Number
-end})
-
-PriorityTab:Divider({Text = "Boxes", Side = "Left"})
-PriorityTab:Toggle({Name = "Boxes Enabled", Side = "Left", Value = esp.priority_boxes[1], Callback = function(Bool)
-    esp.priority_boxes[1] = Bool
-end})
-PriorityTab:Colorpicker({Name = "Boxes Color", Side = "Left", Color = esp.priority_boxes[2], Callback = function(Color)
-    esp.priority_boxes[2] = Color
-end})
-
-PriorityTab:Divider({Text = "Health Bar", Side = "Left"})
-PriorityTab:Toggle({Name = "Health Bar Enabled", Side = "Left", Value = esp.priority_healthbar[1], Callback = function(Bool)
-    esp.priority_healthbar[1] = Bool
-end})
-PriorityTab:Colorpicker({Name = "Health High Color", Side = "Left", Color = esp.priority_healthbar[2], Callback = function(Color)
-    esp.priority_healthbar[2] = Color
-end})
-PriorityTab:Colorpicker({Name = "Health Low Color", Side = "Left", Color = esp.priority_healthbar[3], Callback = function(Color)
-    esp.priority_healthbar[3] = Color
-end})
-
-PriorityTab:Divider({Text = "Kevlar Bar", Side = "Right"})
-PriorityTab:Toggle({Name = "Kevlar Bar Enabled", Side = "Right", Value = esp.priority_kevlarbar[1], Callback = function(Bool)
-    esp.priority_kevlarbar[1] = Bool
-end})
-PriorityTab:Colorpicker({Name = "Kevlar High Color", Side = "Right", Color = esp.priority_kevlarbar[2], Callback = function(Color)
-    esp.priority_kevlarbar[2] = Color
-end})
-PriorityTab:Colorpicker({Name = "Kevlar Low Color", Side = "Right", Color = esp.priority_kevlarbar[3], Callback = function(Color)
-    esp.priority_kevlarbar[3] = Color
-end})
-
-PriorityTab:Divider({Text = "Arrow", Side = "Right"})
-PriorityTab:Toggle({Name = "Arrow Enabled", Side = "Right", Value = esp.priority_arrow[1], Callback = function(Bool)
-    esp.priority_arrow[1] = Bool
-end})
-PriorityTab:Colorpicker({Name = "Arrow Color", Side = "Right", Color = esp.priority_arrow[2], Callback = function(Color)
-    esp.priority_arrow[2] = Color
-end})
-PriorityTab:Slider({Name = "Arrow Transparency", Side = "Right", Min = 0, Max = 1, Value = esp.priority_arrow[3], Precise = 2, Callback = function(Number)
-    esp.priority_arrow[3] = Number
-end})
-
-PriorityTab:Divider({Text = "Text Elements", Side = "Left"})
-PriorityTab:Toggle({Name = "Names Enabled", Side = "Left", Value = esp.priority_names[1], Callback = function(Bool)
-    esp.priority_names[1] = Bool
-end})
-PriorityTab:Colorpicker({Name = "Names Color", Side = "Left", Color = esp.priority_names[2], Callback = function(Color)
-    esp.priority_names[2] = Color
-end})
-
-PriorityTab:Toggle({Name = "Weapon Enabled", Side = "Left", Value = esp.priority_weapon[1], Callback = function(Bool)
-    esp.priority_weapon[1] = Bool
-end})
-PriorityTab:Colorpicker({Name = "Weapon Color", Side = "Left", Color = esp.priority_weapon[2], Callback = function(Color)
-    esp.priority_weapon[2] = Color
-end})
-
-PriorityTab:Toggle({Name = "Show Distance", Side = "Right", Value = esp.priority_distance, Callback = function(Bool)
-    esp.priority_distance = Bool
-end})
-
-PriorityTab:Toggle({Name = "Show Health", Side = "Right", Value = esp.priority_health, Callback = function(Bool)
-    esp.priority_health = Bool
-end})
+esp.priority_names = {true, Color3.fromRGB(255, 255, 0)}
+esp.priority_weapon = {true, Color3.fromRGB(255, 215, 0)}
+esp.priority_distance = true
+esp.priority_health = true
